@@ -1,0 +1,61 @@
+{
+  "name": "dsh-auto-continue-429",
+  "version": "0.3.8",
+  "description": "Auto-Continue for rate limits, quota exhaustion, and configurable errors in the DeepSeek Harness Web UI.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "license": "MIT",
+  "author": "haochi72 <gaozhongxuexizhinan@outlook.com>",
+  "homepage": "https://github.com/haochi72/dsh-auto-continue-429#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/haochi72/dsh-auto-continue-429.git"
+  },
+  "bugs": {
+    "url": "https://github.com/haochi72/dsh-auto-continue-429/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "429",
+    "rate-limit",
+    "auto-continue",
+    "retry",
+    "web-ui",
+    "cordis"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-llm": "^0.1.0-rc.7 || ^0.1.0"
+  },
+  "dependencies": {
+  },
+  "files": [
+    "lib/**/*.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README-EN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "check": "node --check lib/index.js && node --check lib/client.js"
+  }
+}

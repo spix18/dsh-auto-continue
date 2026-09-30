@@ -1,0 +1,7 @@
+# dsh-auto-continue-429 bundle patch
+# Automatically sends continue at the turn level after retryable errors.
+# The host listens for session turn/end events and calls agent.followup().
+# The browser client provides a quick switch and Settings controls.
+- insert:
+    - id: auto-continue-429
+      name: dsh-auto-continue-429
