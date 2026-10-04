@@ -331,7 +331,9 @@ async function main() {
       assert.equal(msg.role, 'user')
       assert.equal(msg.content[0].type, 'text')
       assert.equal(msg.content[0].text, 'continue')
-      assert.deepEqual(msg.source, { kind: 'plugin', plugin: 'auto-continue' })
+      // DSH session format v4 refuses the retired bare {kind:'plugin'} wrapper
+      // on every written row, so the source must be producer-owned.
+      assert.deepEqual(msg.source, { kind: 'plugin:auto-continue' })
       assert.ok(Object.isFrozen(msg), 'the injected message must be deeply frozen')
       assert.equal(typeof msg.id, 'string')
     } finally { restoreFakeTimers() }
@@ -462,6 +464,31 @@ async function main() {
       // the legacy label from the old dsh-auto-continue-429 build counts as ours too
       fire('user/message', { source: { kind: 'plugin', plugin: 'Auto-Continue' } }, 'sess-self')
       assert.equal(timers[0].cleared, false, 'the legacy label must be recognized as our own')
+    } finally { restoreFakeTimers() }
+  })
+
+  await check('the continue carries a producer-owned v4 source kind', async () => {
+    installFakeTimers()
+    try {
+      timers = []
+      const agent = ctx.registeredAgent('sess-kind')
+      fire('turn/end', { turn: 1, reason: { kind: 'error', error: { code: 'RATE_LIMIT' } } }, 'sess-kind')
+      assert.equal(timers.length, 1)
+      await flushTimers()
+      const src = agent.sent[agent.sent.length - 1].source
+      // dsh-session-persistence-jsonl admits every row through
+      // assertV4RowAdmission -> source(), which throws "format v4 message
+      // requires a producer-owned source kind" while the retired bare
+      // {kind:'plugin'} wrapper is still present — failing the whole turn.
+      assert.notEqual(src.kind, 'plugin', 'the bare plugin wrapper was retired in v4')
+      assert.equal(src.kind, 'plugin:auto-continue')
+      assert.equal(src.plugin, undefined, 'the separate plugin field is retired too')
+      // the producer kind must also be recognized as our own message
+      timers = []
+      fire('user/message', { source: { kind: 'plugin:auto-continue' } }, 'sess-kind')
+      fire('turn/end', { turn: 1, reason: { kind: 'error', error: { code: 'RATE_LIMIT' } } }, 'sess-kind')
+      assert.equal(timers.length, 1)
+      assert.equal(timers[0].cleared, false, 'the producer kind must be recognized as our own')
     } finally { restoreFakeTimers() }
   })
 
