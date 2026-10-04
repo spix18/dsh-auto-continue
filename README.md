@@ -139,7 +139,7 @@ dsh-auto-continue/
 **Browser half** (`lib/client.js`) — React registered through DSH's official slot API
 (`@deepseek-ai/dsh-client-ui-slots`) instead of scraping CSS-module hashes:
 
-- `conversation.input.dock` → the quick-switch pill above the composer
+- `conversation.input.left` → the quick-switch pill in the composer tool row
 - `settings.section` → the Settings → **Auto-Continue** page
 - Polls `GET /api/dsh-auto-continue/state` every 2 s, pausing while the tab is hidden
 - Every registration is wrapped so a failure can never blank the slot
@@ -170,11 +170,16 @@ web boot: 8 entries did not activate
 … and 5 more
 ```
 
-**v0.4.3 moved the switch to `conversation.input.dock`** — a `list` slot
-documented as *"full-width entries above the composer card"*, which is both
-collision-free and the right place visually. The test suite now asserts that
-**every** slot this plugin touches is a known `list` slot, so the mistake cannot
-come back.
+**v0.4.3 moved the switch to a `list` slot**, which fixed the outage — but to
+`conversation.input.dock`, documented as *"full-width entries above the composer
+card"*. A 24 px pill in a strip built for full-width entries gets stretched edge
+to edge by the container's `align-items: stretch`, which is exactly how it
+looked.
+
+**v0.4.4 moved it to `conversation.input.left`** — *"compact controls at the
+left of the composer tool row"*, the shape this control actually is. The test
+suite now records the documented shape of every slot this plugin touches, so
+neither the collision nor the mismatch can come back.
 
 ## Permissions
 

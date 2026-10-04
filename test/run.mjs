@@ -640,30 +640,34 @@ async function main() {
   // by client-ui-conversation at the end of its own apply) and took down
   // @deepseek-ai/dsh-client-ui-conversation plus seven dependents at web boot.
   // Only list slots are safe: they are keyed by `id`, so a new entry displaces
-  // nobody.
+  // nobody. The VALUE records the shape the slot is documented for, because a
+  // list slot can still be the wrong list slot: v0.4.3 registered the 24px pill
+  // into conversation.input.dock ("Full-width entries above the composer card")
+  // and the container stretched it edge to edge.
   const SLOT_KINDS = {
-    'conversation.input.dock': 'list',
-    'settings.section': 'list',
+    'conversation.input.left': 'list:compact-tool-row',
+    'settings.section': 'list:settings-page',
   }
 
-  await check('contributes to conversation.input.dock and settings.section', () => {
+  await check('contributes to conversation.input.left and settings.section', () => {
     client.apply(clientCtx)
-    assert.deepEqual(slotCalls.slice().sort(), ['conversation.input.dock', 'settings.section'])
+    assert.deepEqual(slotCalls.slice().sort(), ['conversation.input.left', 'settings.section'])
   })
 
   await check('every contributed slot is kind:list — never a single-occupancy slot', () => {
     for (const key of slotCalls) {
-      assert.equal(
-        SLOT_KINDS[key],
-        'list',
+      assert.match(
+        String(SLOT_KINDS[key]),
+        /^list:/,
         `"${key}" is not a known list slot — a single slot belongs to the core plugin occupying it`,
       )
     }
   })
 
-  await check('the composer switch registers into a list slot with its own id', () => {
-    const bar = registrations.find((r) => r.options.name === 'conversation.input.dock')
+  await check('the composer switch renders into the compact tool row, not a full-width strip', () => {
+    const bar = registrations.find((r) => r.options.name === 'conversation.input.left')
     assert.ok(bar, 'the composer switch was not registered')
+    assert.equal(SLOT_KINDS['conversation.input.left'], 'list:compact-tool-row')
     assert.equal(bar.options.id, 'auto-continue', 'a list slot requires options.id')
     assert.equal(typeof bar.Component, 'function')
   })
@@ -685,7 +689,7 @@ async function main() {
     }
   })
 
-  const Bar = registrations.find((r) => r.options.name === 'conversation.input.dock').Component
+  const Bar = registrations.find((r) => r.options.name === 'conversation.input.left').Component
   const Card = registrations.find((r) => r.options.name === 'settings.section').Component
 
   async function pushState(patch) {

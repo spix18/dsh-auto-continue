@@ -133,7 +133,7 @@ dsh-auto-continue/
 **浏览器端**（`lib/client.js`）—— 通过 DSH 官方 slot API（`@deepseek-ai/dsh-client-ui-slots`）
 注册 React 组件，不再抓取 CSS-module 哈希：
 
-- `conversation.input.dock` → 输入区上方的快捷开关胶囊
+- `conversation.input.left` → 输入工具行左侧的快捷开关胶囊
 - `settings.section` → 「设置 → **Auto-Continue**」页面
 - 每 2 秒轮询 `GET /api/dsh-auto-continue/state`，标签页隐藏时自动暂停
 - 每处注册都包了保护，单点失败**不会**让整个 slot 变空
@@ -154,7 +154,9 @@ web boot: 8 entries did not activate
 … 另有 6 个
 ```
 
-**v0.4.3 把开关移到 `conversation.input.dock`** —— 一个 `list` 槽位，官方注释为「输入卡片上方的整行条目」，既不会冲突，位置在视觉上也正合适。测试套件现在会断言本插件触碰的**每一个**槽位都是已知的 `list` 槽位，这个错误不会再回来。
+**v0.4.3 把开关移到了 `list` 槽位**，崩溃就此修复 —— 但选的是 `conversation.input.dock`，官方注释为「输入卡片上方的**整行**条目」。24px 的胶囊放进一个为整行条目准备的容器里，会被 `align-items: stretch` 拉满整行 —— 当时看到的就是这个样子。
+
+**v0.4.4 把它移到 `conversation.input.left`** —— 「输入工具行左侧的**紧凑**控件」，这才是这个控件本来的形状。测试套件现在会记录本插件触碰的每个槽位**官方注释所述的形状**，冲突和形状错配都不会再回来。
 
 ## 🔒 权限
 
