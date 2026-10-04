@@ -133,10 +133,28 @@ dsh-auto-continue/
 **浏览器端**（`lib/client.js`）—— 通过 DSH 官方 slot API（`@deepseek-ai/dsh-client-ui-slots`）
 注册 React 组件，不再抓取 CSS-module 哈希：
 
-- `conversation.composer.bar` → 输入区的快捷开关胶囊
+- `conversation.input.dock` → 输入区上方的快捷开关胶囊
 - `settings.section` → 「设置 → **Auto-Continue**」页面
 - 每 2 秒轮询 `GET /api/dsh-auto-continue/state`，标签页隐藏时自动暂停
 - 每处注册都包了保护，单点失败**不会**让整个 slot 变空
+- 两处都是 `kind: 'list'` 槽位，插件**不可能**挤掉核心插件自己的条目 —— 见 [槽位安全](#槽位安全)
+
+## 🧩 槽位安全
+
+DSH 的 slot 分类型。`list` 槽位以 `id` 为键，任意数量的插件都能投稿；`single` 槽位**只能有一个条目** —— 而拥有它的核心插件会在自己 `apply` 的末尾占用这个条目。第二个注册会抛 `single slot "<name>" already has a registration`。
+
+这个异常抛在**拥有者自己的 `apply` 里**。所以冲突不只是新来的那个失败：它会杀掉核心插件的 fiber，以及所有等待该插件所提供服务的插件。
+
+v0.4.2 占用了 `conversation.composer.bar`（`kind: 'single'`，由 `@deepseek-ai/dsh-client-ui-conversation` 占用）。web boot 时该插件失败，`uiConversation` 服务始终不出现，7 个依赖它的插件一起挂掉：
+
+```
+web boot: 8 entries did not activate
+@deepseek-ai/dsh-client-ui-conversation: failed
+@deepseek-ai/dsh-client-ui-chat: pending (waiting for service: uiConversation)
+… 另有 6 个
+```
+
+**v0.4.3 把开关移到 `conversation.input.dock`** —— 一个 `list` 槽位，官方注释为「输入卡片上方的整行条目」，既不会冲突，位置在视觉上也正合适。测试套件现在会断言本插件触碰的**每一个**槽位都是已知的 `list` 槽位，这个错误不会再回来。
 
 ## 🔒 权限
 

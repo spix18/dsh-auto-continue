@@ -139,10 +139,42 @@ dsh-auto-continue/
 **Browser half** (`lib/client.js`) — React registered through DSH's official slot API
 (`@deepseek-ai/dsh-client-ui-slots`) instead of scraping CSS-module hashes:
 
-- `conversation.composer.bar` → the quick-switch pill
+- `conversation.input.dock` → the quick-switch pill above the composer
 - `settings.section` → the Settings → **Auto-Continue** page
 - Polls `GET /api/dsh-auto-continue/state` every 2 s, pausing while the tab is hidden
 - Every registration is wrapped so a failure can never blank the slot
+- Both seats are `kind: 'list'` slots, so the plugin can never displace a core
+  plugin's own entry — see [Slot safety](#slot-safety)
+
+## Slot safety
+
+DSH slots come in kinds. A `list` slot is keyed by `id`, so any number of
+plugins can contribute to it. A `single` slot holds exactly one entry — and the
+core plugin that owns it occupies that entry itself, at the end of its own
+`apply`. `ctx.slots.register` throws `single slot "<name>" already has a
+registration` for a second one.
+
+That throw happens **inside the owning plugin's own `apply`**. So a collision
+does not merely fail the newcomer — it kills the core plugin's fiber and every
+plugin waiting on the service that plugin provides.
+
+v0.4.2 claimed `conversation.composer.bar` (`kind: 'single'`, occupied by
+`@deepseek-ai/dsh-client-ui-conversation`). At web boot that plugin failed,
+`uiConversation` never appeared, and seven dependents went down with it:
+
+```
+web boot: 8 entries did not activate
+@deepseek-ai/dsh-client-ui-conversation: failed
+@deepseek-ai/dsh-client-ui-chat: pending (waiting for service: uiConversation)
+@deepseek-ai/dsh-client-ui-workflow-run: pending (waiting for service: uiConversation)
+… and 5 more
+```
+
+**v0.4.3 moved the switch to `conversation.input.dock`** — a `list` slot
+documented as *"full-width entries above the composer card"*, which is both
+collision-free and the right place visually. The test suite now asserts that
+**every** slot this plugin touches is a known `list` slot, so the mistake cannot
+come back.
 
 ## Permissions
 

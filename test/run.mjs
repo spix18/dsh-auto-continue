@@ -417,7 +417,10 @@ async function main() {
       await flushTimers()
       assert.equal(agent.sent.length, 4)
       const d = await callRoute(route('/state'), 'GET')
-      assert.equal(d.retryCounts['sess-reset'], 1, 'the counter must restart at 1 after a completed turn')
+      assert.ok(Number.isInteger(d.retryCount) && d.retryCount >= 1,
+        '/state must still report a live aggregate consecutive-failure count')
+      assert.equal(d.retryCounts, undefined,
+        '/state must not ship per-session counters the browser never reads')
     } finally { restoreFakeTimers() }
   })
 
@@ -627,15 +630,41 @@ async function main() {
     },
   }
 
-  await check('contributes to conversation.composer.bar and settings.section', () => {
+  // Slot kinds as DSH 0.2.0-rc.2 declares them (client-ui-conversation
+  // contract/slots.d.ts, client-ui-settings contract/slots.d.ts).
+  //
+  // This table is a REGRESSION GUARD, not documentation. Registering into a
+  // kind:'single' slot that a core plugin already occupies throws inside that
+  // plugin's OWN apply — which kills its fiber and every plugin waiting on its
+  // service. v0.4.2 claimed conversation.composer.bar (kind:'single', occupied
+  // by client-ui-conversation at the end of its own apply) and took down
+  // @deepseek-ai/dsh-client-ui-conversation plus seven dependents at web boot.
+  // Only list slots are safe: they are keyed by `id`, so a new entry displaces
+  // nobody.
+  const SLOT_KINDS = {
+    'conversation.input.dock': 'list',
+    'settings.section': 'list',
+  }
+
+  await check('contributes to conversation.input.dock and settings.section', () => {
     client.apply(clientCtx)
-    assert.deepEqual(slotCalls.slice().sort(), ['conversation.composer.bar', 'settings.section'])
+    assert.deepEqual(slotCalls.slice().sort(), ['conversation.input.dock', 'settings.section'])
   })
 
-  await check('the composer bar registers with only a name (a single slot rejects an id)', () => {
-    const bar = registrations.find((r) => r.options.name === 'conversation.composer.bar')
-    assert.ok(bar, 'the composer bar was not registered')
-    assert.deepEqual(Array.from(Object.keys(bar.options)), ['name'])
+  await check('every contributed slot is kind:list — never a single-occupancy slot', () => {
+    for (const key of slotCalls) {
+      assert.equal(
+        SLOT_KINDS[key],
+        'list',
+        `"${key}" is not a known list slot — a single slot belongs to the core plugin occupying it`,
+      )
+    }
+  })
+
+  await check('the composer switch registers into a list slot with its own id', () => {
+    const bar = registrations.find((r) => r.options.name === 'conversation.input.dock')
+    assert.ok(bar, 'the composer switch was not registered')
+    assert.equal(bar.options.id, 'auto-continue', 'a list slot requires options.id')
     assert.equal(typeof bar.Component, 'function')
   })
 
@@ -656,7 +685,7 @@ async function main() {
     }
   })
 
-  const Bar = registrations.find((r) => r.options.name === 'conversation.composer.bar').Component
+  const Bar = registrations.find((r) => r.options.name === 'conversation.input.dock').Component
   const Card = registrations.find((r) => r.options.name === 'settings.section').Component
 
   async function pushState(patch) {
