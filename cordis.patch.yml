@@ -1,7 +1,10 @@
-# dsh-auto-continue-429 bundle patch
-# Automatically sends continue at the turn level after retryable errors.
-# The host listens for session turn/end events and calls agent.followup().
-# The browser client provides a quick switch and Settings controls.
+# dsh-auto-continue bundle patch: inserts the auto-continue plugin row into the
+# profile roster. The row is a bare plugin by package name — the node half
+# (exports ".") runs in the host process and listens for session turn/end
+# events, calling agent.followup() to resume a turn that died on a retryable
+# failure; the `dsh.client` declaration in package.json makes the browser half
+# (exports "./client") load in the web GUI, where it contributes a quick switch
+# to the composer bar and a page under Settings.
 - insert:
-    - id: auto-continue-429
-      name: dsh-auto-continue-429
+    - id: auto-continue
+      name: dsh-auto-continue

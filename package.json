@@ -1,13 +1,51 @@
 {
-  "name": "dsh-auto-continue-429",
-  "version": "0.3.8",
-  "description": "Auto-Continue for rate limits, quota exhaustion, and configurable errors in the DeepSeek Harness Web UI.",
+  "name": "dsh-auto-continue",
+  "version": "0.4.0",
+  "description": "Auto-continue plugin for DeepSeek Harness (DSH): automatically resumes a turn that ended on a rate limit (429), an exhausted quota, an empty response, or your own configured error codes — with a per-session consecutive-failure limit, a one-click quick switch in the composer, and a Settings page.",
   "type": "module",
   "main": "lib/index.js",
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "test/run.mjs",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
     "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "auto-continue",
+    "auto-retry",
+    "rate-limit",
+    "429",
+    "quota",
+    "retry",
+    "cordis"
+  ],
+  "author": "spix18 <spix18@users.noreply.github.com> (https://github.com/spix18)",
+  "funding": "https://ko-fi.com/spix18",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spix18/dsh-auto-continue.git"
+  },
+  "homepage": "https://github.com/spix18/dsh-auto-continue#readme",
+  "bugs": {
+    "url": "https://github.com/spix18/dsh-auto-continue/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dsh": {
     "bundle": {
@@ -15,47 +53,14 @@
     },
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime"
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-conversation"
       ],
-      "platform": "web",
-      "immediately": true
+      "platform": "web"
     }
   },
-  "license": "MIT",
-  "author": "haochi72 <gaozhongxuexizhinan@outlook.com>",
-  "homepage": "https://github.com/haochi72/dsh-auto-continue-429#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/haochi72/dsh-auto-continue-429.git"
-  },
-  "bugs": {
-    "url": "https://github.com/haochi72/dsh-auto-continue-429/issues"
-  },
-  "keywords": [
-    "deepseek-harness",
-    "dsh",
-    "dsh-plugin",
-    "429",
-    "rate-limit",
-    "auto-continue",
-    "retry",
-    "web-ui",
-    "cordis"
-  ],
-  "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-llm": "^0.1.0-rc.7 || ^0.1.0"
-  },
-  "dependencies": {
-  },
-  "files": [
-    "lib/**/*.js",
-    "cordis.patch.yml",
-    "README.md",
-    "README-EN.md",
-    "LICENSE"
-  ],
   "scripts": {
-    "check": "node --check lib/index.js && node --check lib/client.js"
+    "check": "node --check lib/index.js && node --check lib/client.js",
+    "test": "node test/run.mjs"
   }
 }
