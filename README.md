@@ -39,7 +39,7 @@ dsh plugin --profile web add "file:$PWD/dsh-auto-continue"
 # headless profile instead of web
 dsh plugin --profile headless add dsh-auto-continue
 
-# run the verification harness (52 assertions over both halves, no DSH needed)
+# run the verification harness (54 assertions over both halves, no DSH needed)
 node test/run.mjs
 ```
 
@@ -123,7 +123,7 @@ dsh-auto-continue/
 ├── lib/
 │   ├── index.js          # host: error interception, backoff, continue, HTTP routes
 │   └── client.js         # browser: composer bar + Settings section (React via slots)
-├── test/run.mjs          # verification harness (52 assertions, both halves)
+├── test/run.mjs          # verification harness (54 assertions, both halves)
 ├── LICENSE               # MIT
 └── README.md
 ```
