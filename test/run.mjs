@@ -766,6 +766,42 @@ async function main() {
     }
   })
 
+  await check('every flex container in the settings card can lose width at a narrow pane', async () => {
+    await pushState({ enabled: true, quickOn: true, buttonHidden: false, retryCount: 0 })
+    const containers = []
+    const walk = (node) => {
+      if (!node || typeof node !== 'object') return
+      if (Array.isArray(node)) { node.forEach(walk); return }
+      const st = (node.props && node.props.style) || {}
+      // A fixed track wider than the narrowest pane we support sits off the edge
+      // no matter what the flex rules say.
+      for (const key of ['width', 'minWidth']) {
+        if (typeof st[key] === 'number') {
+          assert.ok(st[key] <= 320, key + ':' + st[key] + ' pins the card wider than a narrow pane')
+        }
+      }
+      if (st.display === 'flex') {
+        const kids = (node.children || []).filter((c) => c && typeof c === 'object' && !Array.isArray(c))
+        // A flex container has to be able to give up width one way or the other:
+        // either it wraps, or a child is allowed to shrink and truncate.
+        containers.push({
+          wrap: st.flexWrap === 'wrap',
+          shrinks: kids.some((c) => {
+            const cs = (c.props && c.props.style) || {}
+            return cs.minWidth === 0 || cs.textOverflow === 'ellipsis'
+          }),
+        })
+      }
+      if (node.children) node.children.forEach(walk)
+    }
+    walk(render(Card, {}))
+    assert.ok(containers.length >= 3, 'expected several flex containers, got ' + containers.length)
+    for (const c of containers) {
+      assert.ok(c.wrap || c.shrinks, 'a flex container can neither wrap nor shrink at a narrow width')
+    }
+    assert.ok(containers.some((c) => c.wrap), 'nothing wraps — the rows would overflow instead of reflowing')
+  })
+
   await check('the composer bar shows the failure counter while busy', async () => {
     await pushState({ quickOn: true, retryCount: 3, maxRetries: 20 })
     assert.ok(text(render(Bar, {})).includes('3/20'), 'expected 3/20 on the badge')
