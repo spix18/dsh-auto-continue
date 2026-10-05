@@ -34,7 +34,7 @@ dsh plugin --profile web add "file:$PWD/dsh-auto-continue"
 # 装到 headless profile
 dsh plugin --profile headless add dsh-auto-continue
 
-# 跑验证脚本（54 条断言，覆盖两端，不需要启动 DSH）
+# 跑验证脚本（55 条断言，覆盖两端，不需要启动 DSH）
 node test/run.mjs
 ```
 
@@ -117,7 +117,7 @@ dsh-auto-continue/
 ├── lib/
 │   ├── index.js          # 宿主端：错误拦截、退避、continue、HTTP 路由
 │   └── client.js         # 浏览器端：输入区开关 + 设置分区（React，走 slots）
-├── test/run.mjs          # 验证脚本（54 条断言，覆盖两端）
+├── test/run.mjs          # 验证脚本（55 条断言，覆盖两端）
 ├── LICENSE               # MIT
 └── README.md
 ```

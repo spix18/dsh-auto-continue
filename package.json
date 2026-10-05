@@ -1,6 +1,6 @@
 {
   "name": "dsh-auto-continue",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Auto-continue plugin for DeepSeek Harness (DSH): automatically resumes a turn that ended on a rate limit (429), an exhausted quota, an empty response, or your own configured error codes — with a per-session consecutive-failure limit, a one-click quick switch in the composer, and a Settings page.",
   "type": "module",
   "main": "lib/index.js",

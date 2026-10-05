@@ -734,13 +734,36 @@ async function main() {
   await check('the composer bar renders the on state', async () => {
     await pushState({ enabled: true, quickOn: true, buttonHidden: false, retryCount: 0 })
     const t = text(render(Bar, {}))
-    assert.ok(t.includes('Auto-continue'), 'missing the label: ' + t)
+    assert.ok(t.includes('Auto-Continue'), 'missing the label: ' + t)
     assert.ok(t.includes('ON'), 'missing the ON state: ' + t)
   })
 
   await check('the composer bar renders the off state', async () => {
     await pushState({ quickOn: false })
     assert.ok(text(render(Bar, {})).includes('OFF'), 'missing the OFF state')
+  })
+
+  await check('every transition decelerates on the one shared curve', async () => {
+    await pushState({ enabled: true, quickOn: true, buttonHidden: false, retryCount: 0 })
+    const transitions = []
+    const walk = (node) => {
+      if (!node || typeof node !== 'object') return
+      if (Array.isArray(node)) { node.forEach(walk); return }
+      const st = node.props && node.props.style
+      if (st && st.transition) transitions.push(String(st.transition))
+      if (node.children) node.children.forEach(walk)
+    }
+    walk(render(Bar, {}))
+    walk(render(Card, {}))
+    assert.ok(transitions.length >= 2, 'expected transitions on the switch and buttons, got ' + transitions.length)
+    for (const t of transitions) {
+      // One curve for the whole surface. A raw `ease`/`linear` keyword here means
+      // someone bypassed EASE, which is how motion drifts out of tune.
+      assert.ok(
+        t.includes('cubic-bezier(0.25, 1, 0.5, 1)'),
+        'a transition is not on the shared easing curve: ' + t,
+      )
+    }
   })
 
   await check('the composer bar shows the failure counter while busy', async () => {
@@ -779,7 +802,7 @@ async function main() {
       'Enable plugin',
       'Show the quick switch in the composer',
       'Consecutive failure limit',
-      'Additional auto-continue error codes',
+      'Additional Auto-Continue error codes',
     ]) {
       assert.ok(t.includes(expected), `the settings page is missing "${expected}"`)
     }
@@ -839,12 +862,13 @@ async function main() {
     assert.equal(JSON.parse(posted.init.body).maxRetries, 100, '999 must clamp to 100')
   })
 
-  await check('the settings page reports the host as unreachable when the poll fails', async () => {
+  await check('the settings page says the plugin is not responding when the poll fails', async () => {
     failFetch = true
     try {
       await pushState({})
       const t = text(render(Card, {}))
-      assert.ok(t.includes('not reachable'), 'expected the offline status, got: ' + t)
+      assert.ok(t.includes('not responding'), 'expected the offline status, got: ' + t)
+      assert.ok(!/host half/i.test(t), 'internal jargon leaked into the UI: ' + t)
     } finally {
       failFetch = false
       await pushState({})
